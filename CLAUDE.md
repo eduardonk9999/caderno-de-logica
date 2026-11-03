@@ -71,3 +71,12 @@ ficar cada vez melhor em lógica — não decorar respostas.
 - Flashcards: seção `#flashcards` do caderno, deck no array `CARDS` (script no fim do HTML),
   categorias ideias | js | complexidade | problemas. A cada problema/conceito novo, adicionar
   cartas ali (frases dele quando ele explicar bem). Ele pediu isso pra revisar sempre.
+
+## Repositório + GitHub Pages
+
+- Repo público: https://github.com/eduardonk9999/caderno-de-logica (identidade pessoal já
+  configurada como local: eduardonk9999 / thiago.novak7@gmail.com — nunca commitar com a da OKN).
+- Caderno também no ar em https://eduardonk9999.github.io/caderno-de-logica/ (servido de `docs/`).
+- Depois de mexer no `caderno/caderno.html`: republicar o Artifact **e** rodar
+  `./caderno/build-pages.sh` pra regenerar `docs/index.html`.
+- Commit/push: quando ele pedir, ou oferecer no fim da sessão.
