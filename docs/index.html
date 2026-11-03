@@ -1,0 +1,731 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Caderno de Lógica</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Caveat:wght@500;700&family=JetBrains+Mono:wght@400;600&family=Sedgwick+Ave+Display&family=Rubik+Spray+Paint&display=swap">
+<style>
+/* Layout: uma folha de caderno quadriculado, coluna única, margem vermelha à esquerda; cada problema é uma "página" */
+:root {
+  --paper: #fbfcfe;
+  --grid: rgba(35, 80, 200, .07);
+  --ink: #1d2433;
+  --muted: #5b6478;
+  --pen: #2350c8;
+  --marker: #fff27a;
+  --red: #c9392f;
+  --ok: #23804f;
+  --card: #ffffff;
+  --code-bg: #f1f4fb;
+  --line: #d9dfec;
+  --font-body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-hand: "Caveat", "Comic Sans MS", cursive;
+  --font-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  --font-tag: "Sedgwick Ave Display", "Permanent Marker", "Comic Sans MS", cursive;
+  --font-spray: "Rubik Spray Paint", "Impact", sans-serif;
+  /* mural: sempre uma parede escura, nos dois temas */
+  --wall: #24262c;
+  --spray-pink: #ff4fa3;
+  --spray-cyan: #3fe0ff;
+  --spray-yellow: #ffe14d;
+  --chalk: #f4f2ee;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #141821; --grid: rgba(140, 170, 255, .06); --ink: #e6e9f0; --muted: #9aa3b5;
+    --pen: #8fb0ff; --marker: rgba(255, 232, 90, .3); --red: #ff8a7f; --ok: #6fd39b;
+    --card: #1b2030; --code-bg: #0f131b; --line: #2b3346; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #141821; --grid: rgba(140, 170, 255, .06); --ink: #e6e9f0; --muted: #9aa3b5;
+  --pen: #8fb0ff; --marker: rgba(255, 232, 90, .3); --red: #ff8a7f; --ok: #6fd39b;
+  --card: #1b2030; --code-bg: #0f131b; --line: #2b3346; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.6;
+  padding-inline: 16px;
+  padding-block: 32px 64px;
+}
+.sheet {
+  max-width: 760px;
+  margin: 0 auto;
+  border-left: 2px solid color-mix(in srgb, var(--red) 45%, transparent);
+  padding-left: clamp(16px, 4vw, 40px);
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+h1, h2, h3 { line-height: 1.2; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2rem, 6vw, 2.8rem); letter-spacing: -.01em; }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.1rem; }
+p { margin: 0; max-width: 65ch; }
+.hand { font-family: var(--font-hand); color: var(--pen); font-size: 1.45rem; line-height: 1.2; }
+.label { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+mark { background: linear-gradient(transparent 35%, var(--marker) 35%, var(--marker) 90%, transparent 90%); color: inherit; padding: 0 .1em; }
+code { font-family: var(--font-mono); font-size: .88em; background: var(--code-bg); padding: .1em .35em; border-radius: 4px; }
+pre {
+  font-family: var(--font-mono); font-size: .9rem; line-height: 1.55;
+  background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px;
+  padding: 14px 16px; margin: 0; overflow-x: auto;
+}
+pre code { background: none; padding: 0; font-size: inherit; }
+.c { color: var(--muted); }
+.section { display: flex; flex-direction: column; gap: 16px; }
+.stack { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+
+/* cabeçalho */
+.head { display: flex; flex-direction: column; gap: 10px; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 20px; color: var(--muted); font-size: .95rem; }
+.meta b { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+/* revisar hoje */
+.due {
+  background: var(--card); border: 1.5px dashed var(--pen); border-radius: 10px;
+  padding: 16px 18px; display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: baseline;
+}
+.due .when { font-family: var(--font-mono); font-size: .9rem; color: var(--pen); font-variant-numeric: tabular-nums; }
+
+/* página do problema */
+.page-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
+.num { font-family: var(--font-mono); color: var(--pen); font-weight: 600; }
+.chip { font-size: .78rem; font-weight: 700; padding: 2px 10px; border-radius: 99px; border: 1.5px solid currentColor; }
+.chip.easy { color: var(--ok); }
+.chip.help { color: var(--muted); }
+.steps { margin: 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: 6px; }
+
+.oops { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.oops li { display: grid; grid-template-columns: 26px 1fr; gap: 10px; }
+.oops .x { color: var(--red); font-family: var(--font-hand); font-size: 1.6rem; line-height: 1; }
+.oops .body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.fix { color: var(--ok); }
+
+/* ferramentas */
+.tools { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 16px; }
+.tool { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.tool h3 code { font-size: 1rem; }
+
+/* flashcards */
+.cards { display: flex; flex-direction: column; gap: 10px; }
+details {
+  background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px;
+}
+summary { cursor: pointer; font-weight: 700; list-style: none; display: flex; gap: 10px; align-items: baseline; }
+summary::-webkit-details-marker { display: none; }
+summary::before { content: "?"; font-family: var(--font-hand); color: var(--pen); font-size: 1.5rem; line-height: 1; min-width: 14px; }
+details[open] summary::before { content: "✓"; color: var(--ok); }
+summary:focus-visible { outline: 2px solid var(--pen); outline-offset: 4px; border-radius: 4px; }
+details .ans { margin-top: 10px; padding-left: 24px; display: flex; flex-direction: column; gap: 8px; }
+.tap { color: var(--muted); font-size: .85rem; font-weight: 400; margin-left: auto; white-space: nowrap; }
+
+/* trilha */
+.trail { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.trail li { font-size: .88rem; padding: 4px 12px; border-radius: 99px; border: 1px solid var(--line); background: var(--card); color: var(--muted); }
+.trail li.now { border-color: var(--pen); color: var(--pen); font-weight: 700; }
+
+hr { border: 0; border-top: 1px dashed var(--line); margin: 0; }
+
+
+/* ─── flashcards ─── */
+.fc-head { display: flex; flex-direction: column; gap: 4px; }
+.fc-cats { display: flex; flex-wrap: wrap; gap: 8px; }
+.fc-cat {
+  font: inherit; font-size: .9rem; font-weight: 700; cursor: pointer;
+  padding: 6px 14px; border-radius: 99px; border: 1.5px solid var(--line);
+  background: var(--card); color: var(--muted);
+}
+.fc-cat[aria-pressed="true"] { border-color: var(--pen); color: var(--pen); background: color-mix(in srgb, var(--pen) 10%, var(--card)); }
+.fc-cat:focus-visible, .fc-btn:focus-visible, .fc-card:focus-visible { outline: 2px solid var(--pen); outline-offset: 3px; }
+.fc-stage { display: flex; flex-direction: column; gap: 12px; max-width: 560px; }
+.fc-meta { display: flex; justify-content: space-between; align-items: baseline; }
+.fc-count { font-family: var(--font-mono); font-size: .85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.fc-card {
+  position: relative; display: grid; width: 100%; padding: 0; border: 0;
+  background: none; cursor: pointer; perspective: 1200px; font: inherit; color: inherit; text-align: left;
+}
+.fc-face {
+  grid-area: 1 / 1; min-height: 230px; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 14px;
+  padding: 26px 24px; border-radius: 12px; background: var(--card);
+  border: 1.5px solid var(--line); box-shadow: 4px 5px 0 color-mix(in srgb, var(--pen) 22%, transparent);
+  backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  transition: transform .45s cubic-bezier(.2,.7,.2,1);
+}
+.fc-back { transform: rotateY(180deg); border-color: var(--ok); box-shadow: 4px 5px 0 color-mix(in srgb, var(--ok) 25%, transparent); }
+.fc-card.flipped .fc-front { transform: rotateY(-180deg); }
+.fc-card.flipped .fc-back { transform: rotateY(0deg); }
+.fc-mark { font-family: var(--font-hand); font-size: 2.4rem; line-height: 1; color: var(--pen); }
+.fc-mark.ok { color: var(--ok); }
+.fc-q { font-size: clamp(1.15rem, 3.6vw, 1.35rem); font-weight: 700; line-height: 1.4; }
+.fc-a { font-size: 1.05rem; line-height: 1.55; display: flex; flex-direction: column; gap: 10px; }
+.fc-a pre { font-size: .82rem; }
+.fc-hint { font-size: .85rem; color: var(--muted); }
+.fc-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.fc-btn {
+  font: inherit; font-weight: 700; font-size: 1rem; cursor: pointer;
+  padding: 12px 16px; border-radius: 10px; border: 1.5px solid currentColor; background: var(--card);
+}
+.fc-btn.hit { color: var(--ok); }
+.fc-btn.miss { color: var(--red); }
+.fc-done { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.fc-score { font-family: var(--font-tag); font-size: 2.2rem; color: var(--pen); line-height: 1.1; }
+@media (prefers-reduced-motion: reduce) { .fc-face { transition: none; } }
+
+/* ─── grafite ─── */
+.sticker {
+  font-family: var(--font-spray); font-size: 1.05rem; color: var(--wall);
+  background: var(--spray-yellow); padding: 3px 12px 4px; border-radius: 3px;
+  transform: rotate(-4deg); display: inline-block; letter-spacing: .02em;
+  box-shadow: 2px 3px 0 color-mix(in srgb, var(--wall) 25%, transparent);
+}
+.mural {
+  position: relative; overflow: hidden; border-radius: 6px;
+  background: var(--wall); color: var(--chalk);
+  min-height: 300px;
+}
+.mural canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.mural-in {
+  position: relative; display: flex; flex-direction: column; gap: 22px;
+  padding: 28px clamp(16px, 4vw, 32px) 30px;
+}
+.tag-wrap { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 4px 18px; }
+.tag {
+  font-family: var(--font-tag); font-size: clamp(4.2rem, 17vw, 7.5rem); line-height: .95;
+  color: var(--spray-pink); transform: rotate(-5deg); display: inline-block;
+  text-shadow:
+    3px 3px 0 var(--wall), -3px -3px 0 var(--wall), 3px -3px 0 var(--wall), -3px 3px 0 var(--wall),
+    7px 7px 0 var(--spray-cyan), 0 0 26px color-mix(in srgb, var(--spray-pink) 55%, transparent);
+}
+.tag-sub {
+  font-family: var(--font-tag); font-size: clamp(1.5rem, 5vw, 2.1rem); color: var(--spray-yellow);
+  transform: rotate(-3deg); display: inline-block; padding-bottom: 10px;
+  text-shadow: 0 0 14px color-mix(in srgb, var(--spray-yellow) 45%, transparent);
+}
+.bars { display: flex; flex-direction: column; gap: 12px; max-width: 520px; }
+.bar-row { display: grid; grid-template-columns: 3.6em 1fr; align-items: center; gap: 4px 12px; }
+.bar-n { font-family: var(--font-spray); font-size: 1.25rem; color: var(--chalk); text-align: right; }
+.bar { display: flex; flex-wrap: wrap; gap: 5px; min-width: 0; }
+.bar i {
+  width: 16px; height: 22px; border-radius: 3px; background: var(--spray-cyan);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--spray-cyan) 60%, transparent);
+}
+.bar-long {
+  height: 22px; border-radius: 3px; width: 100%;
+  background: repeating-linear-gradient(90deg, var(--spray-pink) 0 16px, transparent 16px 21px);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--spray-pink) 50%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, #000 75%, transparent);
+          mask-image: linear-gradient(90deg, #000 75%, transparent);
+}
+.bar-out { grid-column: 2; font-family: var(--font-tag); color: var(--spray-yellow); font-size: 1.2rem; }
+.mine {
+  background: var(--card); border: 2px solid var(--spray-pink); border-radius: 10px;
+  padding: 18px 20px; display: flex; flex-direction: column; gap: 8px;
+  transform: rotate(-.6deg);
+  box-shadow: 5px 5px 0 color-mix(in srgb, var(--spray-cyan) 55%, transparent);
+}
+.mine-text { font-family: var(--font-hand); font-size: clamp(1.6rem, 4.5vw, 2rem); line-height: 1.25; color: var(--ink); }
+.mine-by { font-size: .9rem; color: var(--muted); }
+.vs { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--card); }
+.vs-row { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 8px; padding: 10px 14px; font-variant-numeric: tabular-nums; }
+.vs-row + .vs-row { border-top: 1px solid var(--line); }
+.vs-head { font-size: .75rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.vs-row span:nth-child(2) { color: var(--ok); font-weight: 700; }
+.vs-row .boom { color: var(--red); font-weight: 700; }
+.vs-head span:nth-child(2) { color: var(--muted); }
+.tag.tag-sq {
+  color: var(--spray-cyan);
+  text-shadow:
+    3px 3px 0 var(--wall), -3px -3px 0 var(--wall), 3px -3px 0 var(--wall), -3px 3px 0 var(--wall),
+    7px 7px 0 var(--spray-pink), 0 0 26px color-mix(in srgb, var(--spray-cyan) 55%, transparent);
+}
+.sq-wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 20px 32px; }
+.sq-grid { display: grid; grid-template-columns: repeat(4, 30px); gap: 6px; transform: rotate(3deg); }
+.sq-grid i {
+  width: 30px; height: 30px; border-radius: 3px; background: var(--spray-pink);
+  box-shadow: 0 0 9px color-mix(in srgb, var(--spray-pink) 60%, transparent);
+}
+.sq-math { display: flex; flex-direction: column; gap: 6px; font-family: var(--font-tag); min-width: 0; }
+.sq-yes { font-size: clamp(2rem, 7vw, 2.6rem); color: var(--spray-yellow); line-height: 1; }
+.sq-no {
+  font-size: 1.5rem; color: var(--chalk); opacity: .75; line-height: 1;
+  text-decoration: line-through; text-decoration-color: var(--spray-pink); text-decoration-thickness: 4px;
+}
+.sq-note { font-size: 1.15rem; color: var(--spray-cyan); }
+.quote {
+  font-family: var(--font-hand); font-size: 1.7rem; line-height: 1.25; color: var(--pen);
+  border-left: 3px solid var(--spray-pink); padding-left: 14px;
+}
+</style>
+</head>
+<body>
+
+<main class="sheet">
+
+  <header class="head">
+    <span class="label">LeetCode · JavaScript</span>
+    <h1>Caderno de Lógica</h1>
+    <p class="hand">Tudo que eu já aprendi, em pedacinhos. Uma coisa de cada vez.</p>
+    <div class="meta">
+      <span>Comecei em <b>29 out 2026</b></span>
+      <span>Problemas resolvidos: <b>1</b></span>
+      <span>Padrão atual: <b>Arrays &amp; Hashing</b></span>
+    </div>
+  </header>
+
+  <section class="due" aria-label="Próxima revisão">
+    <span class="label">Revisar</span>
+    <span class="when">06 nov 2026</span>
+    <span>Refazer o <strong>217 Contains Duplicate</strong>. Revisão de 03 nov: <mark>de cabeça</mark> ✔ (achei o bug lendo a mensagem de erro)</span>
+  </section>
+
+  <!-- ─── flashcards ─── -->
+  <section class="section" id="flashcards">
+    <div class="fc-head">
+      <h2>Flashcards</h2>
+      <p class="hand">Uma carta por vez. Responde de cabeça, depois vira.</p>
+    </div>
+
+    <div class="fc-cats" role="group" aria-label="Categorias">
+      <button type="button" class="fc-cat" data-cat="todas" aria-pressed="true">Todas</button>
+      <button type="button" class="fc-cat" data-cat="ideias" aria-pressed="false">Ideias</button>
+      <button type="button" class="fc-cat" data-cat="js" aria-pressed="false">JavaScript</button>
+      <button type="button" class="fc-cat" data-cat="complexidade" aria-pressed="false">O(n) e O(n²)</button>
+      <button type="button" class="fc-cat" data-cat="problemas" aria-pressed="false">Problemas</button>
+    </div>
+
+    <div class="fc-stage">
+      <div class="fc-meta">
+        <span id="fc-cat-label" class="label">Ideias</span>
+        <span id="fc-count" class="fc-count">1 de 15</span>
+      </div>
+      <button type="button" class="fc-card" id="fc-card" aria-live="polite">
+        <span class="fc-face fc-front">
+          <span class="fc-mark" aria-hidden="true">?</span>
+          <span id="fc-q" class="fc-q">Por que o computador precisa de um caderninho?</span>
+          <span class="fc-hint">toca pra virar</span>
+        </span>
+        <span class="fc-face fc-back">
+          <span class="fc-mark ok" aria-hidden="true">✓</span>
+          <span id="fc-a" class="fc-a">Porque ele olha uma carta por vez. Pra saber se é repetida, precisa lembrar das que já viu.</span>
+        </span>
+      </button>
+      <div class="fc-actions" id="fc-actions" hidden>
+        <button type="button" class="fc-btn miss" id="fc-miss">✗ Errei</button>
+        <button type="button" class="fc-btn hit" id="fc-hit">✓ Acertei</button>
+      </div>
+      <div class="fc-done" id="fc-done" hidden>
+        <p class="fc-score" id="fc-score">Acertei 15 de 15</p>
+        <p id="fc-done-msg">As que você errou voltaram pro fim da fila e você acertou depois. Isso é aprender.</p>
+        <button type="button" class="fc-btn hit" id="fc-again">Jogar de novo</button>
+      </div>
+    </div>
+  </section>
+
+  <hr>
+
+  <!-- ─── página: 217 ─── -->
+  <section class="section" id="p217">
+    <div class="page-head">
+      <span class="num">#217</span>
+      <h2>Contains Duplicate</h2>
+      <span class="chip easy">Easy</span>
+      <span class="chip help">feito com dicas</span>
+      <span class="sticker">1º leetcode ✔</span>
+    </div>
+
+    <p class="hand">Aqui eu entendi O(n) de verdade! 🎉</p>
+    <p><strong>O problema:</strong> a lista tem algum número repetido? Se sim, <code>true</code>. Se não, <code>false</code>.</p>
+<pre><code>[1, 2, 3, 1]  →  true    <span class="c">// o 1 aparece 2x</span>
+[1, 2, 3, 4]  →  false   <span class="c">// ninguém repete</span></code></pre>
+
+    <div class="stack">
+      <h3>A ideia</h3>
+      <p>O computador olha <mark>uma carta por vez</mark>. Pra saber se uma carta é repetida, ele precisa <mark>lembrar das que já viu</mark>. Pra isso ele usa um caderninho.</p>
+      <ol class="steps">
+        <li>Vira a carta e olha no caderninho: <strong>já está lá?</strong> Se sim, <code>return true</code>.</li>
+        <li>Se não está, <strong>anota</strong> no caderninho.</li>
+        <li>Virou todas e nunca repetiu? <code>return false</code>.</li>
+      </ol>
+    </div>
+
+    <div class="stack">
+      <h3>Meu código</h3>
+<pre><code>function containsDuplicate(nums) {
+  const caderninho = new Set();   <span class="c">// novo a cada chamada</span>
+
+  for (const num of nums) {       <span class="c">// vira as cartas</span>
+    if (caderninho.has(num)) {
+      return true;                <span class="c">// já vi → achei!</span>
+    } else {
+      caderninho.add(num);        <span class="c">// não vi → anota</span>
+    }
+  }
+
+  return false;                   <span class="c">// DEPOIS do for</span>
+}</code></pre>
+    </div>
+
+    <div class="stack">
+      <h3>Erros que eu cometi (e agora sei evitar)</h3>
+      <ul class="oops">
+        <li>
+          <span class="x" aria-hidden="true">✗</span>
+          <div class="body">
+            <p><code>caderninho.has(nums)</code>, com <strong>s</strong>. Isso pergunta pela lista inteira, que nunca está no caderninho.</p>
+            <p class="fix">✓ <code>has(num)</code>: pergunta pela carta da vez.</p>
+          </div>
+        </li>
+        <li>
+          <span class="x" aria-hidden="true">✗</span>
+          <div class="body">
+            <p>Caderninho criado <strong>fora da função</strong>. Ele ficou sujo do teste 1 e o teste 2 achou um 1 que não existia.</p>
+            <p class="fix">✓ Criar <strong>dentro da função, antes do for</strong>. Dentro do for também não serve: ele esqueceria tudo a cada carta.</p>
+          </div>
+        </li>
+        <li>
+          <span class="x" aria-hidden="true">✗</span>
+          <div class="body">
+            <p><code>return false</code> <strong>dentro do for</strong>. A função parou já na primeira carta.</p>
+            <p class="fix">✓ Colocar <strong>depois da <code>}</code> que fecha o for</strong>. O <code>return</code> faz a função parar na hora.</p>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <hr>
+
+  <!-- ─── O(n) ─── -->
+  <section class="section" id="on">
+    <div class="mural" data-seed="217" data-main="--spray-pink" data-alt="--spray-cyan">
+      <canvas aria-hidden="true"></canvas>
+      <div class="mural-in">
+        <div class="tag-wrap">
+          <span class="tag">O(n)</span>
+          <span class="tag-sub">ó de ene</span>
+        </div>
+        <div class="bars" role="img" aria-label="4 números viram 4 cartas, 10 viram 10, 1 milhão vira 1 milhão">
+          <div class="bar-row"><span class="bar-n">4</span><span class="bar"><i></i><i></i><i></i><i></i></span></div>
+          <div class="bar-row"><span class="bar-n">10</span><span class="bar"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
+          <div class="bar-row"><span class="bar-n">1 mi</span><span class="bar bar-long"></span><span class="bar-out">→ sai da parede</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mine">
+      <span class="label">Com as minhas palavras</span>
+      <p class="mine-text">"n é quantos números tem a lista. <mark>O(n)</mark>: a quantidade de trabalho do código é igual à quantidade de itens da lista."</p>
+      <p class="mine-by">— eu, 01 nov 2026, no dia em que finalmente entendi O(n)</p>
+    </div>
+
+    <div class="stack">
+      <h2>O(n), explicado</h2>
+      <p>Com 10 números, o código vira 10 cartas. Com <strong>1 milhão</strong> de números, viraria 1 milhão de cartas.</p>
+      <p>Percebe o padrão?</p>
+<pre><code>4 números        →  4 cartas
+10 números       →  10 cartas
+1.000.000        →  1.000.000 cartas</code></pre>
+      <p>O trabalho <mark>cresce junto com o tamanho da lista</mark>. Na entrevista isso tem um nome: <strong>O(n)</strong>, que se lê "ó de ene".</p>
+      <ul class="steps">
+        <li><strong>n</strong> = quantos números tem a lista</li>
+        <li><strong>O(n)</strong> = "o trabalho é mais ou menos n"</li>
+      </ul>
+      <p>Pronto, é só isso. Quando o entrevistador perguntar qual a complexidade, você responde:</p>
+      <p class="quote">"O(n), porque eu passo por cada número uma vez."</p>
+    </div>
+
+    <div class="stack">
+      <h3>E sem o caderninho? O jeito lento: O(n²)</h3>
+      <div class="mural" data-seed="289" data-main="--spray-cyan" data-alt="--spray-pink">
+        <canvas aria-hidden="true"></canvas>
+        <div class="mural-in">
+          <div class="tag-wrap">
+            <span class="tag tag-sq">O(n²)</span>
+            <span class="tag-sub">n × n</span>
+          </div>
+          <div class="sq-wrap">
+            <div class="sq-grid" role="img" aria-label="Um quadrado de 4 por 4 cartas: 16">
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+            </div>
+            <div class="sq-math">
+              <span class="sq-yes">4 × 4 = 16</span>
+              <span class="sq-no">4 × 2 = 8</span>
+              <span class="sq-note">multiplica por ele mesmo, não dobra!</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p>Sem poder anotar, eu decoro <strong>um</strong> número e comparo com todos os outros. Depois o próximo, e assim vai. Ou seja: <mark>todo mundo com todo mundo</mark>.</p>
+<pre><code>[1, 2, 3, 4]
+decorei o 1:  comparo com 2, 3, 4   → 3
+decorei o 2:  comparo com 3, 4      → 2
+decorei o 3:  comparo com 4         → 1
+                              total → 6</code></pre>
+      <div class="vs" role="table" aria-label="Caderninho contra sem caderninho">
+        <div class="vs-row vs-head" role="row"><span role="columnheader">números</span><span role="columnheader">caderninho · O(n)</span><span role="columnheader">sem caderninho · O(n²)</span></div>
+        <div class="vs-row" role="row"><span role="cell">4</span><span role="cell">4</span><span role="cell">6</span></div>
+        <div class="vs-row" role="row"><span role="cell">10</span><span role="cell">10</span><span role="cell">45</span></div>
+        <div class="vs-row" role="row"><span role="cell">1 milhão</span><span role="cell">1 milhão</span><span role="cell" class="boom">500 bilhões 😱</span></div>
+      </div>
+      <div class="mine">
+        <span class="label">O que é o ² ?</span>
+        <p class="mine-text">Ao quadrado = multiplicar o número <mark>por ele mesmo</mark>. Não é dobrar!</p>
+<pre><code>dobrar         →  3 × 2 = 6
+ao quadrado    →  3 × 3 = 9
+n²             =  n × n</code></pre>
+        <p class="mine-by">É um quadrado: cada carta comparada com cada carta, n de largura × n de altura.</p>
+      </div>
+      <p>Na entrevista eu escolho o <strong>caderninho</strong>. Dica: dá pra começar falando do jeito lento e depois dizer <em>"dá pra melhorar pra O(n) usando um Set"</em>. O entrevistador adora ver isso.</p>
+    </div>
+  </section>
+
+  <hr>
+
+  <!-- ─── ferramentas ─── -->
+  <section class="section" id="ferramentas">
+    <h2>Ferramentas de JavaScript</h2>
+    <div class="tools">
+      <div class="tool">
+        <h3><code>Set</code> é o caderninho</h3>
+        <p><code>add</code> anota, <code>has</code> pergunta se já está lá.</p>
+<pre><code>const c = new Set();
+c.add(7);
+c.has(7);  <span class="c">// true</span>
+c.has(5);  <span class="c">// false (nunca anotei)</span></code></pre>
+      </div>
+      <div class="tool">
+        <h3><code>for...of</code> vira as cartas</h3>
+        <p>Entrega o <strong>valor</strong> de cada item, um por vez. Não precisa de índice.</p>
+<pre><code>for (const num of [1, 2, 3, 1]) {
+  <span class="c">// num: 1, 2, 3, 1</span>
+}</code></pre>
+      </div>
+      <div class="tool">
+        <h3>Índice x quantidade</h3>
+        <p>O índice começa no 0, então o último índice é o <mark>tamanho menos 1</mark>.</p>
+<pre><code>índice:  0  1  2  3
+valor:  [1, 2, 3, 1]   <span class="c">// 4 itens</span></code></pre>
+      </div>
+      <div class="tool">
+        <h3>Rodar o código</h3>
+        <p>No Claude Code, com <code>!</code> na frente. Assim o Claude vê o resultado também.</p>
+<pre><code>! node problemas/0217-contains-duplicate.js</code></pre>
+        <p>Antes, salvar no nvim com <code>:w</code>.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr>
+
+  <!-- ─── trilha ─── -->
+  <section class="section" id="trilha">
+    <h2>A trilha</h2>
+    <p>Os padrões que vou aprender, em ordem. Um de cada vez.</p>
+    <ul class="trail">
+      <li class="now">Arrays &amp; Hashing · 1/7</li>
+      <li>Two Pointers</li>
+      <li>Sliding Window</li>
+      <li>Stack</li>
+      <li>Binary Search</li>
+      <li>Linked List</li>
+      <li>Trees</li>
+      <li>Heap</li>
+      <li>Backtracking</li>
+      <li>Graphs</li>
+      <li>DP 1D</li>
+      <li>DP 2D</li>
+      <li>Greedy</li>
+      <li>Intervals</li>
+      <li>Bônus</li>
+    </ul>
+  </section>
+
+</main>
+
+<script>
+// Paredes de grafite: textura de reboco, névoa de spray e escorridos de tinta embaixo de cada tag.
+(function () {
+  const css = getComputedStyle(document.documentElement);
+  const col = (n) => css.getPropertyValue(n).trim();
+
+  function rng(seed) { // aleatório com semente: a arte fica igual a cada desenho
+    return function () {
+      seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
+      let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function paint(mural) {
+    const tag = mural.querySelector(".tag");
+    const cv = mural.querySelector("canvas");
+    const main = col(mural.dataset.main || "--spray-pink");
+    const alt = col(mural.dataset.alt || "--spray-cyan");
+    const r = mural.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
+    const ctx = cv.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const W = r.width, H = r.height, rand = rng(+(mural.dataset.seed || 217));
+
+    ctx.fillStyle = col("--wall"); ctx.fillRect(0, 0, W, H);
+
+    // reboco
+    for (let i = 0; i < (W * H) / 18; i++) {
+      ctx.fillStyle = rand() < .5 ? "rgba(255,255,255,.035)" : "rgba(0,0,0,.18)";
+      ctx.fillRect(rand() * W, rand() * H, 1.4, 1.4);
+    }
+
+    // névoa de spray atrás da tag
+    const t = tag.getBoundingClientRect();
+    const tx = t.left - r.left, ty = t.top - r.top;
+    [[alt, .8, .55, 1.1], [main, .25, .4, .9]].forEach(([c, fx, fy, s]) => {
+      const cx = tx + t.width * fx, cy = ty + t.height * fy, rad = Math.max(t.width, t.height) * s;
+      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, rad);
+      g.addColorStop(0, c + "38"); g.addColorStop(1, c + "00");
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    });
+
+    // respingos em volta
+    for (let i = 0; i < 900; i++) {
+      const a = rand() * Math.PI * 2, d = Math.pow(rand(), .6) * t.width * .75;
+      ctx.globalAlpha = rand() * .5;
+      ctx.fillStyle = rand() < .7 ? main : alt;
+      ctx.beginPath();
+      ctx.arc(tx + t.width / 2 + Math.cos(a) * d, ty + t.height / 2 + Math.sin(a) * d * .6, rand() * 1.6, 0, 7);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // escorridos
+    ctx.strokeStyle = main; ctx.fillStyle = main; ctx.lineCap = "round";
+    for (let i = 0; i < 8; i++) {
+      const x = tx + t.width * (.1 + rand() * .8);
+      const y0 = ty + t.height * (.72 + rand() * .12);
+      const len = 18 + rand() * 70, w = 2 + rand() * 3.5;
+      ctx.lineWidth = w;
+      ctx.beginPath(); ctx.moveTo(x, y0); ctx.lineTo(x + (rand() - .5) * 2, y0 + len); ctx.stroke();
+      ctx.beginPath(); ctx.arc(x, y0 + len, w * .9, 0, 7); ctx.fill();
+    }
+  }
+
+  const murals = document.querySelectorAll(".mural");
+  const go = () => requestAnimationFrame(() => murals.forEach(paint));
+  (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(go);
+  go();
+  if ("ResizeObserver" in window) murals.forEach((m) => new ResizeObserver(go).observe(m));
+})();
+</script>
+
+<script>
+// Flashcards: um deck por categoria. Errou? A carta volta pro fim da fila.
+// Pra adicionar carta nova: um item a mais em CARDS (cat: ideias | js | complexidade | problemas).
+(function () {
+  const CARDS = [
+    { cat: "ideias", q: "Por que o computador precisa de um caderninho?",
+      a: "Porque ele olha <strong>uma carta por vez</strong>. Pra saber se a carta é repetida, precisa lembrar das que já viu." },
+    { cat: "ideias", q: "Roubaram o caderninho. Como achar um repetido sem anotar nada?",
+      a: "Decorar <strong>um</strong> número e comparar com todos os outros. Depois o próximo. Todo mundo com todo mundo." },
+    { cat: "ideias", q: "Quais são os 3 passos do caderninho?",
+      a: "1. Já está no caderninho? → <code>return true</code><br>2. Não está? → anota<br>3. Virou todas? → <code>return false</code>" },
+    { cat: "js", q: "Qual a diferença entre <code>add</code> e <code>has</code> no Set?",
+      a: "<code>add</code> <strong>anota</strong>. <code>has</code> <strong>pergunta</strong> se está lá e devolve <code>true</code> ou <code>false</code>." },
+    { cat: "js", q: "<code>c.add(7)</code>. Quanto dá <code>c.has(5)</code>?",
+      a: "<code>false</code>. O 5 nunca foi anotado." },
+    { cat: "js", q: "O que o <code>for...of</code> te entrega a cada volta?",
+      a: "O <strong>valor</strong> de cada item, um por vez. Não precisa de índice.<pre><code>for (const num of [1, 2, 3]) { }  // 1, 2, 3</code></pre>" },
+    { cat: "js", q: "Onde o <code>new Set()</code> deve ficar?",
+      a: "<strong>Dentro da função, antes do for.</strong> Fora da função ele fica sujo entre os testes. Dentro do for ele esquece tudo a cada carta." },
+    { cat: "js", q: "Por que o <code>return false</code> vai depois do for?",
+      a: "Só dá pra dizer \"não tem repetido\" depois de olhar <strong>todas</strong> as cartas. O <code>return</code> para a função na hora." },
+    { cat: "js", q: "A função deu <code>undefined</code>. O que isso quer dizer?",
+      a: "Ela chegou no fim <strong>sem nenhum return</strong>. Não devolveu nada." },
+    { cat: "js", q: "<code>[1, 2, 3, 1]</code> tem quantos itens? Qual é o último índice?",
+      a: "<strong>4 itens.</strong> Último índice: <strong>3</strong>, porque começa no 0. Último índice = tamanho − 1." },
+    { cat: "js", q: "Apareceu <code>TypeError: nums.has is not a function</code>. O que isso quer dizer?",
+      a: "Que eu chamei <code>has</code> em quem <strong>não é um Set</strong>. <code>nums</code> é a lista; o caderninho é o Set. Troca por <code>caderno.has(n)</code>." },
+    { cat: "complexidade", q: "O que é o <strong>n</strong>?",
+      a: "Quantos números tem a lista. O tamanho dela." },
+    { cat: "complexidade", q: "O que quer dizer <strong>O(n)</strong>? (com as suas palavras)",
+      a: "\"n é quantos números tem a lista. O(n): a quantidade de trabalho do código é igual à quantidade de itens da lista.\"" },
+    { cat: "complexidade", q: "O ² em O(n²) quer dizer \"dobrar\"?",
+      a: "<strong>Não!</strong> É ao quadrado: n × n.<pre><code>dobrar       3 × 2 = 6\nao quadrado  3 × 3 = 9</code></pre>" },
+    { cat: "complexidade", q: "1 milhão de números: quanto trabalho em O(n) e em O(n²)?",
+      a: "O(n): uns <strong>1 milhão</strong> de passos.<br>O(n²): uns <strong>500 bilhões</strong>. 😱" },
+    { cat: "complexidade", q: "O entrevistador pergunta a complexidade do 217. O que você responde?",
+      a: "\"<strong>O(n)</strong>, porque eu passo por cada número uma vez.\" Bônus: \"sem o Set seria O(n²)\"." },
+    { cat: "problemas", q: "#217 Contains Duplicate: qual é a ideia?",
+      a: "Um <code>Set</code> como caderninho. Pra cada número: já está lá? <code>true</code>. Se não, anota. No fim, <code>false</code>." },
+    { cat: "problemas", q: "#217: escreve o código de cabeça (no papel ou no nvim). Depois vira.",
+      a: "<pre><code>function containsDuplicate(nums) {\n  const caderninho = new Set();\n  for (const num of nums) {\n    if (caderninho.has(num)) return true;\n    caderninho.add(num);\n  }\n  return false;\n}</code></pre>" }
+  ];
+  const NAMES = { todas: "Todas", ideias: "Ideias", js: "JavaScript", complexidade: "O(n) e O(n²)", problemas: "Problemas" };
+
+  const $ = (id) => document.getElementById(id);
+  const card = $("fc-card"), actions = $("fc-actions"), done = $("fc-done");
+  let queue = [], total = 0, hits = 0, firstTry = 0, missed = new Set(), cat = "todas";
+
+  try { cat = localStorage.getItem("fc-cat") || "todas"; } catch (e) {}
+  if (!NAMES[cat]) cat = "todas";
+
+  function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+  function start() {
+    queue = shuffle(CARDS.filter((c) => cat === "todas" || c.cat === cat).slice());
+    total = queue.length; hits = 0; firstTry = 0; missed = new Set();
+    document.querySelectorAll(".fc-cat").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.cat === cat)));
+    done.hidden = true; card.hidden = false;
+    show();
+  }
+
+  function show() {
+    const c = queue[0];
+    card.classList.remove("flipped"); actions.hidden = true;
+    $("fc-q").innerHTML = c.q; $("fc-a").innerHTML = c.a;
+    $("fc-cat-label").textContent = NAMES[c.cat];
+    $("fc-count").textContent = (hits + 1) + " de " + total;
+  }
+
+  function answer(ok) {
+    const c = queue.shift();
+    if (ok) { hits++; if (!missed.has(c)) firstTry++; }
+    else { missed.add(c); queue.push(c); }
+    if (queue.length) { show(); return; }
+    card.hidden = true; actions.hidden = true; done.hidden = false;
+    $("fc-score").textContent = "De primeira: " + firstTry + " de " + total;
+    $("fc-done-msg").textContent = firstTry === total
+      ? "Todas de primeira! 🔥"
+      : "As que você errou voltaram pro fim da fila, e no fim você acertou todas. Isso é aprender.";
+  }
+
+  card.addEventListener("click", () => { card.classList.toggle("flipped"); actions.hidden = !card.classList.contains("flipped"); });
+  $("fc-hit").addEventListener("click", () => answer(true));
+  $("fc-miss").addEventListener("click", () => answer(false));
+  $("fc-again").addEventListener("click", start);
+  document.querySelectorAll(".fc-cat").forEach((b) => b.addEventListener("click", () => {
+    cat = b.dataset.cat;
+    try { localStorage.setItem("fc-cat", cat); } catch (e) {}
+    start();
+  }));
+
+  start();
+})();
+</script>
+</body>
+</html>
